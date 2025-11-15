@@ -3,6 +3,8 @@ set -euo pipefail
 
 # Validate argument
 if [ $# -eq 0 ]; then
+  # ./scripts/operation.sh startup
+  # ./scripts/operation.sh cleanup
   echo "Usage: $0 <startup|cleanup>"
   exit 1
 fi
