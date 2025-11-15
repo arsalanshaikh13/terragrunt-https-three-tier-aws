@@ -1,0 +1,11 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.aws_route53_zone.public-zone" [label="data.aws_route53_zone.public-zone"];
+  "aws_acm_certificate.cert" [label="aws_acm_certificate.cert"];
+  "aws_acm_certificate_validation.cert_validation" [label="aws_acm_certificate_validation.cert_validation"];
+  "aws_route53_record.cert_validation_record" [label="aws_route53_record.cert_validation_record"];
+  "aws_acm_certificate_validation.cert_validation" -> "aws_route53_record.cert_validation_record";
+  "aws_route53_record.cert_validation_record" -> "data.aws_route53_zone.public-zone";
+  "aws_route53_record.cert_validation_record" -> "aws_acm_certificate.cert";
+}

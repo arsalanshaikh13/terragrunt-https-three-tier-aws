@@ -1,0 +1,9 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.local_file.packer_manifest_backend" [label="data.local_file.packer_manifest_backend"];
+  "data.local_file.packer_manifest_frontend" [label="data.local_file.packer_manifest_frontend"];
+  "null_resource.build_ami" [label="null_resource.build_ami"];
+  "data.local_file.packer_manifest_backend" -> "null_resource.build_ami";
+  "data.local_file.packer_manifest_frontend" -> "null_resource.build_ami";
+}

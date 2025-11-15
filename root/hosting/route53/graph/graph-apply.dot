@@ -1,0 +1,9 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.aws_route53_zone.public-zone" [label="data.aws_route53_zone.public-zone"];
+  "aws_route53_record.cloudfront" [label="aws_route53_record.cloudfront"];
+  "aws_route53_record.cloudfront_record" [label="aws_route53_record.cloudfront_record"];
+  "aws_route53_record.cloudfront" -> "data.aws_route53_zone.public-zone";
+  "aws_route53_record.cloudfront_record" -> "data.aws_route53_zone.public-zone";
+}

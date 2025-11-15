@@ -1,0 +1,14 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "aws_lb.application_load_balancer" [label="aws_lb.application_load_balancer"];
+  "aws_lb.internal_application_load_balancer" [label="aws_lb.internal_application_load_balancer"];
+  "aws_lb_listener.alb_http_listener" [label="aws_lb_listener.alb_http_listener"];
+  "aws_lb_listener.internal_alb_http_listener" [label="aws_lb_listener.internal_alb_http_listener"];
+  "aws_lb_target_group.alb_target_group" [label="aws_lb_target_group.alb_target_group"];
+  "aws_lb_target_group.internal_alb_target_group" [label="aws_lb_target_group.internal_alb_target_group"];
+  "aws_lb_listener.alb_http_listener" -> "aws_lb.application_load_balancer";
+  "aws_lb_listener.alb_http_listener" -> "aws_lb_target_group.alb_target_group";
+  "aws_lb_listener.internal_alb_http_listener" -> "aws_lb.internal_application_load_balancer";
+  "aws_lb_listener.internal_alb_http_listener" -> "aws_lb_target_group.internal_alb_target_group";
+}

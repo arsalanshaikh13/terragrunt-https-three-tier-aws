@@ -81,7 +81,7 @@ module "rds" {
   db_password   = var.db_password
   depends_on    = [module.vpc, module.security-group] # Wait for VPC before DB
 }
-
+ 
 module "aws_secret" {
   source         = "../modules/aws_secret"
   db_dns_address = module.rds.endpoint_address

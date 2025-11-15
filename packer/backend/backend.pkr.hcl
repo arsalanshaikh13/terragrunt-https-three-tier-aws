@@ -5,8 +5,8 @@
 # Variables
 # -----------------------
 variable "aws_region" {
-  type        = string
-  default     = "us-east-1"
+  type = string
+  # default     = "us-east-1"
   description = "AWS region to build the AMI in."
 }
 
@@ -16,18 +16,23 @@ variable "source_ami" {
   description = "Base AMI to use as the source image (set via -var or a var-file)."
 }
 
-variable "instance_type" {
-  type        = string
+variable "backend_instance_type" {
+  type = string
   # default     = "t4g.micro"
   # https://aws.amazon.com/ec2/instance-types/t4/
-  default     = "t4g.small"
+  # default     = "t4g.small"
   description = "EC2 instance type to use for the temporary build instance."
 }
 
 variable "ssh_username" {
-  type        = string
-  default     = "ec2-user"
+  type = string
+  # default     = "ec2-user"
   description = "SSH user for the temporary build instance."
+}
+variable "ssh_interface" {
+  type = string
+  # default     = "session_manager"
+  description = "SSH interface for the temporary build instance."
 }
 
 variable "vpc_id" {
@@ -61,8 +66,8 @@ variable "db_host" {
 }
 
 variable "db_port" {
-  type        = string
-  default     = "3306"
+  type = string
+  # default     = "3306"
   description = "Database port (string to match original)."
 }
 variable "db_name" {
@@ -98,6 +103,25 @@ variable "bucket_name" {
   default     = ""
   description = "s3  bucket name"
 }
+variable "volume_type" {
+  type        = string
+  default     = ""
+  description = "volume type of instance"
+}
+variable "volume_size" {
+  type        = number
+  description = "volume storage size"
+}
+variable "environment" {
+  type        = string
+  default     = ""
+  description = "environment - dev, prod, staging"
+}
+variable "backend_ami_name" {
+  type        = string
+  default     = ""
+  description = "backend ami name"
+}
 
 
 locals {
@@ -119,42 +143,42 @@ locals {
 # Source (amazon-ebs builder)
 # -----------------------
 source "amazon-ebs" "backend" {
-  region                      = var.aws_region
-  source_ami                  = var.source_ami
+  region     = var.aws_region
+  source_ami = var.source_ami
   # source_ami                  = data.amazon-ami.example.id
-  instance_type               = var.instance_type
+  instance_type               = var.backend_instance_type
   vpc_id                      = var.vpc_id
   subnet_id                   = var.subnet_id
   security_group_id           = var.security_group_id
   associate_public_ip_address = true
   ssh_username                = var.ssh_username
-  # temporary_key_pair_name     = "packer-${local.timestamp}"
-  # ssh_interface               = "public_ip"
-  # ssh_timeout                 = "10m"
-  # ssh_handshake_attempts      = 30
+  temporary_key_pair_name     = "packer-${local.timestamp}"
+  ssh_timeout                 = "10m"
+  ssh_handshake_attempts      = 30
   communicator                = "ssh"
-  # ssh_pty                     = true
-  # communicator                = "ssm"
-  ssh_interface    = "session_manager"
+  ssh_pty                     = true
+  # ssh_interface               = "public_ip"
+  # ssh_interface = "session_manager"
+  ssh_interface = var.ssh_interface
 
-  iam_instance_profile        = var.s3_ssm_cw_instance_profile_name
+  iam_instance_profile = var.s3_ssm_cw_instance_profile_name
 
 
-  ami_name        = "three-tier-backend-${local.timestamp}"
+  ami_name        = "${var.backend_ami_name}-${local.timestamp}"
   ami_description = "Backend AMI with NodeJS, MySQL client, and CloudWatch agent"
 
   tags = {
     Component   = "backend"
-    Environment = "dev"
-    Name        = "three-tier-backend"
+    Environment = var.environment
+    Name        = var.backend_ami_name
   }
 
   launch_block_device_mappings {
-      device_name = "/dev/xvda"
-      encrypted = true
-      volume_type = "standard"
-      volume_size = 8
-      delete_on_termination = true
+    device_name           = "/dev/xvda"
+    encrypted             = true
+    volume_type           = var.volume_type
+    volume_size           = var.volume_size
+    delete_on_termination = true
   }
 }
 
@@ -164,31 +188,9 @@ source "amazon-ebs" "backend" {
 build {
   sources = ["source.amazon-ebs.backend"]
 
-  # provisioner "shell" {
-  #   inline = [
-  #     "sudo dnf upgrade -y",
-  #     "sudo dnf install -y httpd wget php-fpm php-mysqli php-json php php-devel -y",
-  #     "sudo dnf install mariadb105 -y",
-  #     "sudo usermod -a -G apache ec2-user",
-  #     "sudo chown -R ec2-user:apache /var/www",
-  #     "sudo chmod 2775 /var/www && find /var/www -type d -exec sudo chmod 2775 {} \\;",
-  #     "find /var/www -type f -exec sudo chmod 0664 {} \\;",
-  #     "sudo systemctl enable httpd",
-  #     "sudo dnf install git -y"
-  #   ]
-  # }
-#   provisioner "shell" {
-#   inline = [
-#     "echo 'Starting app-tier setup...'",
-#     "sudo bash -c 'cat <<EOF > /tmp/server.sh\n${file("server.sh")}\nEOF'",
-#     "sudo chmod +x /tmp/app-setup.sh",
-#     "sudo bash /tmp/app-setup.sh"
-#   ]
-# }
-
   provisioner "file" {
-    source      = "server.sh"           # local file (in same dir as packer/terraform)
-    destination = "/tmp/server.sh"      # remote path inside EC2
+    source      = "server.sh"      # local file (in same dir as packer/terraform)
+    destination = "/tmp/server.sh" # remote path inside EC2
   }
 
   provisioner "shell" {
@@ -199,46 +201,20 @@ build {
       "db_name=${var.db_name}",
       "db_secret_name=${var.db_secret_name}",
       "bucket_name=${var.bucket_name}",
-      "aws_region=${var.aws_region}"
-  ]
-    # inline = [
-    #   "echo 'Running app-tier setup...'",
-    #   "echo $db_name ${db_name} $db_secret_name ${db_secret_name} ",
-    #   "echo $bucket_name ${bucket_name}",
-    #   "sudo chmod +x /tmp/server.sh",
-    #   "sudo bash /tmp/server.sh"
-    # ]
-
+      "aws_region=${var.aws_region}",
+      "ssh_username=${var.ssh_username}"
+    ]
+  
     inline = [
-      "export db_host='${var.db_host}'",
-      "export db_username='${var.db_user}'",
-      "export db_password='${var.db_password}'",
-      "export db_name='${var.db_name}'",
-      "export db_secret_name='${var.db_secret_name}'",
-      "export bucket_name='${var.bucket_name}'",
-      "export aws_region='${var.aws_region}'",
       "echo 'Running app-tier setup...'",
       "echo $db_name  $db_secret_name  ",
       "echo Bucket: $bucket_name",
+      #### dos2unix server.sh to convert CRLF to LF to run on server linux instance
       "sudo chmod +x /tmp/server.sh",
-      # "sudo bash /tmp/server.sh '${var.db_host}' '${var.db_user}' '${var.db_password}' '${var.db_name}' '${var.db_secret_name}' '${var.bucket_name}' '${var.aws_region}'"    
-      "sudo bash /tmp/server.sh $db_host $db_username $db_password $db_name $db_secret_name $bucket_name $aws_region"    
+      "sudo -E bash /tmp/server.sh "
     ]
   }
-
-
-  # provisioner "file" {
-  #   source      = "appdb.sql"
-  #   destination = "/tmp/appdb.sql"
-  # }
-
-  # provisioner "shell" {
-  #   inline = [
-  #     "# Run the database setup script to create schema and initial data",
-  #     "mysql -h \"${var.db_host}\" -P ${var.db_port} -u \"${var.db_user}\" -p\"${var.db_password}\" < /tmp/appdb.sql"
-  #   ]
-  # }
-
+  
   post-processor "manifest" {
     output = "manifest.json"
   }

@@ -1,0 +1,5 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "aws_cloudfront_distribution.my_distribution" [label="aws_cloudfront_distribution.my_distribution"];
+}

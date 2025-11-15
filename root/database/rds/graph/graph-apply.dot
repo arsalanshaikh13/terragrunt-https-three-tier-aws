@@ -1,0 +1,7 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "aws_db_instance.panda-database" [label="aws_db_instance.panda-database"];
+  "aws_db_subnet_group.db-subnet" [label="aws_db_subnet_group.db-subnet"];
+  "aws_db_instance.panda-database" -> "aws_db_subnet_group.db-subnet";
+}

@@ -1,0 +1,13 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "data.aws_ami.latest_amazon_linux" [label="data.aws_ami.latest_amazon_linux"];
+  "aws_instance.nat_ec2_instance" [label="aws_instance.nat_ec2_instance"];
+  "aws_route.nat_ec2_route" [label="aws_route.nat_ec2_route"];
+  "aws_route.nat_ec2_route1" [label="aws_route.nat_ec2_route1"];
+  "aws_security_group.nat_ec2_sg" [label="aws_security_group.nat_ec2_sg"];
+  "aws_instance.nat_ec2_instance" -> "data.aws_ami.latest_amazon_linux";
+  "aws_instance.nat_ec2_instance" -> "aws_security_group.nat_ec2_sg";
+  "aws_route.nat_ec2_route" -> "aws_instance.nat_ec2_instance";
+  "aws_route.nat_ec2_route1" -> "aws_instance.nat_ec2_instance";
+}

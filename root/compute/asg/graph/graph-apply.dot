@@ -1,0 +1,26 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "aws_autoscaling_group.asg_name" [label="aws_autoscaling_group.asg_name"];
+  "aws_autoscaling_group.server_asg_name" [label="aws_autoscaling_group.server_asg_name"];
+  "aws_autoscaling_policy.scale_down" [label="aws_autoscaling_policy.scale_down"];
+  "aws_autoscaling_policy.scale_up" [label="aws_autoscaling_policy.scale_up"];
+  "aws_autoscaling_policy.server_scale_down" [label="aws_autoscaling_policy.server_scale_down"];
+  "aws_autoscaling_policy.server_scale_up" [label="aws_autoscaling_policy.server_scale_up"];
+  "aws_cloudwatch_metric_alarm.scale_down_alarm" [label="aws_cloudwatch_metric_alarm.scale_down_alarm"];
+  "aws_cloudwatch_metric_alarm.scale_up_alarm" [label="aws_cloudwatch_metric_alarm.scale_up_alarm"];
+  "aws_cloudwatch_metric_alarm.server_scale_down_alarm" [label="aws_cloudwatch_metric_alarm.server_scale_down_alarm"];
+  "aws_cloudwatch_metric_alarm.server_scale_up_alarm" [label="aws_cloudwatch_metric_alarm.server_scale_up_alarm"];
+  "aws_launch_template.lt_name" [label="aws_launch_template.lt_name"];
+  "aws_launch_template.server_lt_name" [label="aws_launch_template.server_lt_name"];
+  "aws_autoscaling_group.asg_name" -> "aws_launch_template.lt_name";
+  "aws_autoscaling_group.server_asg_name" -> "aws_launch_template.server_lt_name";
+  "aws_autoscaling_policy.scale_down" -> "aws_autoscaling_group.asg_name";
+  "aws_autoscaling_policy.scale_up" -> "aws_autoscaling_group.asg_name";
+  "aws_autoscaling_policy.server_scale_down" -> "aws_autoscaling_group.server_asg_name";
+  "aws_autoscaling_policy.server_scale_up" -> "aws_autoscaling_group.server_asg_name";
+  "aws_cloudwatch_metric_alarm.scale_down_alarm" -> "aws_autoscaling_policy.scale_down";
+  "aws_cloudwatch_metric_alarm.scale_up_alarm" -> "aws_autoscaling_policy.scale_up";
+  "aws_cloudwatch_metric_alarm.server_scale_down_alarm" -> "aws_autoscaling_policy.server_scale_down";
+  "aws_cloudwatch_metric_alarm.server_scale_up_alarm" -> "aws_autoscaling_policy.server_scale_up";
+}

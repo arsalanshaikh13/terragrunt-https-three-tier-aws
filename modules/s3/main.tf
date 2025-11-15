@@ -12,7 +12,8 @@ resource "aws_s3_bucket" "panda-bucket" {
 
 # Define folder path relative to the module
 locals {
-  upload_folder = "${path.root}/application-code/application-code"
+  # upload_folder = "${path.root}/application-code/application-code"
+  upload_folder = var.upload_folder_with_terragrunt
 
   # Collect all files under application-code/
   all_files = fileset(local.upload_folder, "**/*")
@@ -41,8 +42,9 @@ resource "aws_s3_object" "app_code_upload" {
   # source = "${local.upload_folder}/${each.key}"
   # etag   = filemd5("${local.upload_folder}/${each.key}")
   key    = "application-code/${each.value}"    # keep same folder structure
-  source = "${path.root}/application-code/application-code/${each.value}"
-  etag   = filemd5("${path.root}/application-code/application-code/${each.value}")
+  # source = "${path.root}/application-code/application-code/${each.value}"
+  source = "${local.upload_folder}/${each.value}"
+  etag   = filemd5("${local.upload_folder}/${each.value}")
 
   acl = "private"
 }

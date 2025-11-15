@@ -1,0 +1,11 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "aws_secretsmanager_secret.db_secret" [label="aws_secretsmanager_secret.db_secret"];
+  "aws_secretsmanager_secret_version.db_secret_version" [label="aws_secretsmanager_secret_version.db_secret_version"];
+  "aws_ssm_parameter.db_host" [label="aws_ssm_parameter.db_host"];
+  "aws_ssm_parameter.db_name" [label="aws_ssm_parameter.db_name"];
+  "aws_ssm_parameter.db_password" [label="aws_ssm_parameter.db_password"];
+  "aws_ssm_parameter.db_username" [label="aws_ssm_parameter.db_username"];
+  "aws_secretsmanager_secret_version.db_secret_version" -> "aws_secretsmanager_secret.db_secret";
+}

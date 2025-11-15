@@ -1,14 +1,14 @@
 #!/bin/bash
-exec > >(tee /var/log/user-data.log) 2>&1
 set -euo pipefail
+exec > >(tee /var/log/user-data.log) 2>&1
 
-db_host=$1
-db_username=$2
-db_password=$3
-db_name=$4
-db_secret_name=$5
-bucket_name=$6
-aws_region=$7
+# db_host=$1
+# db_username=$2
+# db_password=$3
+# db_name=$4
+# db_secret_name=$5
+# bucket_name=$6
+# aws_region=$7
 
 # =========================================
 # COMMANDS TO RUN IN THE APPLICATION SERVER
@@ -21,11 +21,14 @@ aws_region=$7
 
 
 
-sudo -su ec2-user
+# sudo -su ${ssh_username} # when ssh_pty = true this is not required
 echo "${bucket_name} name of the bucket"
 # COPY APP CODE
-cd /home/ec2-user
+cd /home/${ssh_username}
+pwd
 aws s3 cp s3://${bucket_name}/application-code/app-tier app-tier --recursive
+sudo sed -i "s/<react_node_app>/${db_name}/g" /home/${ssh_username}/app-tier/appdb.sql
+
 
 echo "========== Preparing SQL schema =========="
 cp app-tier/appdb.sql /tmp/appdb.sql
@@ -66,7 +69,7 @@ mysql -h "${db_host}" \
 # !!! IMP !!!
 # MODIFY BELOW CODE WITH YOUR S3 BUCKET NAME
 # # COPY APP CODE
-# cd /home/ec2-user
+# cd /home/${ssh_username}
 # aws s3 cp s3://${bucket_name}/application-code/app-tier app-tier --recursive
 # or
 # sudo yum install git -y
@@ -81,19 +84,21 @@ mysql -h "${db_host}" \
 sudo sed -i "s/<secret-name>/${db_secret_name}/g" app-tier/DbConfig.js
 sudo sed -i "s/<region>/${aws_region}/g" app-tier/DbConfig.js
 
-chown -R ec2-user:ec2-user /home/ec2-user/app-tier
-chmod -R 755 /home/ec2-user/app-tier
+chown -R ${ssh_username}:${ssh_username} /home/${ssh_username}/app-tier
+chmod -R 755 /home/${ssh_username}/app-tier
 
 #===============================
 # INSTALLING NODEJS
 #===============================
 # (REF: https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html)
-
-# RUN NVM/Node/PM2 AS ec2-user
-sudo runuser -l ec2-user -c '
-# set -xe
-export HOME=/home/ec2-user
+export HOME=/home/${ssh_username}
 export NVM_DIR="$HOME/.nvm"
+
+# RUN NVM/Node/PM2 AS ${ssh_username}
+sudo runuser -l ${ssh_username} -c "
+set -xe
+# export HOME=/home/${ssh_username}
+# export NVM_DIR="$HOME/.nvm"
 
 # Install NVM
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
@@ -108,7 +113,7 @@ nvm use 16
 
 # Install dependencies and PM2
 npm install -g pm2
-cd /home/ec2-user/app-tier
+cd /home/${ssh_username}/app-tier
 npm install
 npm audit fix || true
 
@@ -118,26 +123,26 @@ npm audit fix || true
 # Start app with PM2
 pm2 start index.js
 pm2 startup || true
-'
-# pm2 startup systemd -u ec2-user --hp /home/ec2-user
+"
+# pm2 startup systemd -u ${ssh_username} --hp /home/${ssh_username}
 sudo env \
-  PATH=$PATH:/home/ec2-user/.nvm/versions/node/v16.20.2/bin \
-  /home/ec2-user/.nvm/versions/node/v16.20.2/lib/node_modules/pm2/bin/pm2 \
-  startup systemd -u ec2-user --hp /home/ec2-user
-sudo env \
-  PATH=$PATH:/home/ec2-user/.nvm/versions/node/v16.20.2/bin \
-  /home/ec2-user/.nvm/versions/node/v16.20.2/lib/node_modules/pm2/bin/pm2 \
-  startup systemd -u ec2-user --hp /home/ec2-user
+  PATH=$PATH:/home/${ssh_username}/.nvm/versions/node/v16.20.2/bin \
+  /home/${ssh_username}/.nvm/versions/node/v16.20.2/lib/node_modules/pm2/bin/pm2 \
+  startup systemd -u ${ssh_username} --hp /home/${ssh_username}
+# sudo env \
+#   PATH=$PATH:/home/${ssh_username}/.nvm/versions/node/v16.20.2/bin \
+#   /home/${ssh_username}/.nvm/versions/node/v16.20.2/lib/node_modules/pm2/bin/pm2 \
+#   startup systemd -u ${ssh_username} --hp /home/${ssh_username}
 
 
-sudo runuser -l ec2-user -c 'pm2 save'
+sudo runuser -l ${ssh_username} -c 'pm2 save'
 
 # HEALTH CHECK
 curl -f http://localhost:4000/health || echo "Health check failed"
 
 # Install CloudWatch agent
 sudo yum install -y amazon-cloudwatch-agent
-export LOG_DIR="/home/ec2-user/.pm2/logs"
+export LOG_DIR="/home/${ssh_username}/.pm2/logs"
 # Create CloudWatch agent configuration
 sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json > /dev/null <<EOL
 {
@@ -169,4 +174,4 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 
 
 
-#/etc/systemd/system/pm2-ec2-user.service.
+#/etc/systemd/system/pm2-${ssh_username}.service.

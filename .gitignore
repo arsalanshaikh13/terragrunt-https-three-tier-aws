@@ -54,7 +54,7 @@ plan.*
 # Local .terraform directories
 **/.terraform/*
 .terraform/*
-*lock.hcl
+# *lock.hcl
 *.lock*
 ../.terraform/*
 terraform.*
@@ -66,3 +66,7 @@ terraform.*
 *.tfstate.*
 env.sh
 *.log
+*.bak
+.terragrunt-*
+packer-logs/
+root/.gitignore

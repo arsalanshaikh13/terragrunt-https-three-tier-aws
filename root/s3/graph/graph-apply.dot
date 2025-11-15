@@ -1,0 +1,7 @@
+digraph G {
+  rankdir = "RL";
+  node [shape = rect, fontname = "sans-serif"];
+  "aws_s3_bucket.panda-bucket" [label="aws_s3_bucket.panda-bucket"];
+  "aws_s3_object.app_code_upload" [label="aws_s3_object.app_code_upload"];
+  "aws_s3_object.app_code_upload" -> "aws_s3_bucket.panda-bucket";
+}

@@ -1,8 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-bucket_name=$1
-internal_alb_dns_name=$2
+# bucket_name=$1
+# internal_alb_dns_name=$2
 
 # =========================================
 # COMMANDS TO RUN IN THE WEB SERVER
@@ -12,25 +12,25 @@ internal_alb_dns_name=$2
 # COPY WEB-TIER CODE FROM S3
 # =========================================
 exec > >(tee /var/log/user-data.log) 2>&1
-sudo -su ec2-user
-cd /home/ec2-user
+# sudo -su ${ssh_username} # when ssh_pty = true this is not required
+cd /home/${ssh_username}
 
 # !!! IMP !!!
 # MODIFY BELOW CODE WITH YOUR S3 BUCKET NAME
 sudo aws s3 cp s3://${bucket_name}/application-code/web-tier web-tier --recursive
-sudo chown -R ec2-user:ec2-user /home/ec2-user
-sudo chmod -R 755 /home/ec2-user
+sudo chown -R ${ssh_username}:${ssh_username} /home/${ssh_username}
+sudo chmod -R 755 /home/${ssh_username}
 
 # =========================================
 # INSTALLING NODEJS (FOR USING REACT LIBRARY)
 # =========================================
 # (REF: https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/setting-up-node-on-ec2-instance.html)	
-sudo runuser -l ec2-user -c '
+sudo runuser -l ${ssh_username} -c "
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 source ~/.bashrc
 nvm install 16
 nvm use 16
-cd /home/ec2-user/web-tier
+cd /home/${ssh_username}/web-tier
 npm install
 npm audit fix
 
@@ -38,9 +38,9 @@ npm audit fix
 # BUILDING THE APP FOR PRODUCTION
 # =========================================
 # Below command is used to build the code which can be served by the webserver (Nginx)
-cd /home/ec2-user/web-tier
+cd /home/${ssh_username}/web-tier
 npm run build
-'
+"
 # =========================================
 # INSTALLING NGINX (WEBSERVER)
 # =========================================
@@ -56,7 +56,7 @@ sudo mv nginx.conf nginx-backup.conf
 sudo aws s3 cp s3://${bucket_name}/application-code/nginx.conf .
 sudo sed -i "s/<Your-Internal-LoadBalancer-DNS>/${internal_alb_dns_name}/g" nginx.conf
 
-sudo chmod -R 755 /home/ec2-user
+sudo chmod -R 755 /home/${ssh_username}
 sudo service nginx restart
 sudo chkconfig nginx on
 
