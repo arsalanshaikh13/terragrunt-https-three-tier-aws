@@ -70,3 +70,4 @@ env.sh
 .terragrunt-*
 packer-logs/
 root/.gitignore
+root/graph
