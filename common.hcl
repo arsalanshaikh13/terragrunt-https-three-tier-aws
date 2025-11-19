@@ -1,3 +1,5 @@
+# https://www.youtube.com/watch?v=K-usNxyEETE&list=PL6YlWHeZL6SxXN_wNX2ZdkH40_iEf_SLq&index=18 - malek karemi nejad 
+# - be-devops terraform and terragrunt series
 
 locals {
 
